@@ -61,7 +61,7 @@ jobs:
             <meta name="twitter:title" content="Auto Thread Protocol"/>
             <meta name="twitter:description" content="Provisioned protocol for operator auto-threads (handoff/freeze/priority/mirrors)."/>
 
-            <meta http-equiv="refresh" content="0; url=${base_path}/documentation/index/"/>
+            <meta http-equiv="refresh" content="0; url=${base_path}/documentation/auto-thread-protocol/"/>
           </head>
           <body>
             <p>Redirecting to documentation...</p>
@@ -81,7 +81,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}documentation/index/
+      url: ${{ steps.deployment.outputs.page_url }}documentation/auto-thread-protocol/
     steps:
       - name: Deploy
         id: deployment
