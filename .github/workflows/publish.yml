@@ -1,0 +1,88 @@
+name: Publish DocC
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Swift
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: '6.2'
+
+      - name: Build DocC
+        run: |
+          set -euo pipefail
+          output_root="${GITHUB_WORKSPACE}/_site"
+          rm -rf "${output_root}"
+          mkdir -p "${output_root}"
+
+          repo_name="${GITHUB_REPOSITORY#*/}"
+          base_path="/${repo_name}"
+
+          docc convert "index.docc" \
+            --output-path "${output_root}" \
+            --transform-for-static-hosting \
+            --hosting-base-path "${base_path}"
+
+          cat > "${output_root}/index.html" <<EOF
+          <!doctype html>
+          <html lang="en">
+          <head>
+            <meta charset="utf-8"/>
+            <meta name="viewport" content="width=device-width, initial-scale=1"/>
+            <title>Auto Thread Protocol</title>
+            <meta name="description" content="Provisioned protocol for operator auto-threads (handoff/freeze/priority/mirrors)."/>
+
+            <meta property="og:type" content="website"/>
+            <meta property="og:title" content="Auto Thread Protocol"/>
+            <meta property="og:description" content="Provisioned protocol for operator auto-threads (handoff/freeze/priority/mirrors)."/>
+            <meta property="og:image" content="https://github.com/wrkstrm.png?size=512"/>
+
+            <meta name="twitter:image" content="https://github.com/wrkstrm.png?size=512"/>
+            <meta name="twitter:card" content="summary_large_image"/>
+            <meta name="twitter:title" content="Auto Thread Protocol"/>
+            <meta name="twitter:description" content="Provisioned protocol for operator auto-threads (handoff/freeze/priority/mirrors)."/>
+
+            <meta http-equiv="refresh" content="0; url=${base_path}/documentation/index/"/>
+          </head>
+          <body>
+            <p>Redirecting to documentation...</p>
+          </body>
+          </html>
+          EOF
+
+          touch "${output_root}/.nojekyll"
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}documentation/index/
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
